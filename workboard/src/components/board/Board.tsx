@@ -1,11 +1,19 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { DragDropContext, type DropResult } from '@hello-pangea/dnd';
+import { useSearchParams } from 'react-router-dom';
+import { Empty, Button } from 'antd';
+import { Alert } from '../ui/Alert';
 import { BoardColumn } from './BoardColumn';
-import { mockBoardData } from '../../data/mockBoard';
-import type { BoardData } from '../../types/board';
+import { useBoardContext } from '../../context/BoardContext';
+import { BoardFilters } from './BoardFilters';
+import { useTaskFilters } from '../../hooks/useTaskFilters';
+import type { TaskStatus, BoardData } from '../../types/board';
 
 export const Board: React.FC = () => {
-  const [data, setData] = useState<BoardData>(mockBoardData);
+  const { data, setData, storageError } = useBoardContext();
+  const [, setSearchParams] = useSearchParams();
+
+  const { columnsWithTasks, totalMatched, totalTasks } = useTaskFilters(data);
 
   const onDragEnd = (result: DropResult) => {
     const { destination, source, draggableId } = result;
@@ -64,7 +72,7 @@ export const Board: React.FC = () => {
     const task = data.tasks[draggableId];
     const updatedTask = {
       ...task,
-      status: finishColumn.id,
+      status: finishColumn.id as TaskStatus,
       updatedAt: new Date().toISOString(),
     };
 
@@ -82,16 +90,54 @@ export const Board: React.FC = () => {
     });
   };
 
-  return (
-    <div className="flex pt-4 pb-8 overflow-x-auto h-full gap-6">
-      <DragDropContext onDragEnd={onDragEnd}>
-        {data.columnOrder.map((columnId) => {
-          const column = data.columns[columnId];
-          const tasks = column.taskIds.map((taskId) => data.tasks[taskId]);
+  const renderBoardContent = () => {
+    if (totalTasks === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center w-full h-full pb-20">
+          <Empty 
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description={<span className="text-gray-500 text-lg">No tasks yet! Create a task to start building your board.</span>}
+          />
+        </div>
+      );
+    }
 
-          return <BoardColumn key={column.id} column={column} tasks={tasks} />;
-        })}
+    if (totalMatched === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center w-full h-full pb-20">
+          <Empty 
+            description={<span className="text-gray-500 text-lg">No tasks match your active filters.</span>}
+          >
+            <Button onClick={() => setSearchParams(new URLSearchParams())}>Clear Filters</Button>
+          </Empty>
+        </div>
+      );
+    }
+
+    return (
+      <DragDropContext onDragEnd={onDragEnd}>
+        {columnsWithTasks.map(({ column, tasks }) => (
+          <BoardColumn key={column.id} column={column} tasks={tasks} />
+        ))}
       </DragDropContext>
+    );
+  };
+
+  return (
+    <div className="flex flex-col h-full w-full overflow-hidden">
+      {storageError && (
+        <Alert
+          title="Storage Limits Reached"
+          variant="error"
+          className="shrink-0 z-50 fixed top-0 w-full left-0 opacity-95 rounded-none border-x-0"
+        >
+          Local browser storage is currently unavailable or full. Your changes will exclusively operate inside transient memory and will NOT persist across window reloads.
+        </Alert>
+      )}
+      <BoardFilters />
+      <div className="flex pt-2 pb-8 overflow-x-auto h-full gap-6">
+        {renderBoardContent()}
+      </div>
     </div>
   );
 };

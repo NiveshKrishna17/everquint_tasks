@@ -16,7 +16,7 @@ const columnColors = {
 
 export const BoardColumn: React.FC<BoardColumnProps> = ({ column, tasks }) => {
   return (
-    <div className="flex flex-col flex-shrink-0 w-80">
+    <div className="flex flex-col flex-shrink-0 flex-1 min-w-[300px]">
       {/* Column Header */}
       <div className="flex items-center justify-between mb-3 px-1">
         <h3 className="font-semibold text-gray-700 flex items-center gap-2">

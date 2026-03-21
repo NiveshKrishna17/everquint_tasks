@@ -1,20 +1,16 @@
 import React from 'react';
 import { Draggable } from '@hello-pangea/dnd';
 import { Avatar, Tooltip } from 'antd';
+import { Badge } from '../ui/Badge';
 import { ClockCircleOutlined, UserOutlined } from '@ant-design/icons';
 import { formatDistanceToNow } from 'date-fns';
+import { Link, useNavigate } from 'react-router-dom';
 import type { Task } from '../../types/board';
 
 interface TaskCardProps {
   task: Task;
   index: number;
 }
-
-const priorityColors = {
-  low: 'bg-green-100 text-green-700',
-  medium: 'bg-yellow-100 text-yellow-700',
-  high: 'bg-red-100 text-red-700',
-};
 
 const priorityLabels = {
   low: 'Low',
@@ -23,33 +19,52 @@ const priorityLabels = {
 };
 
 export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
+  const navigate = useNavigate();
   const timeAgo = formatDistanceToNow(new Date(task.updatedAt), { addSuffix: true });
 
   return (
     <Draggable draggableId={task.id} index={index}>
       {(provided, snapshot) => (
         <div
-          ref={provided.innerRef}
+          ref={provided.innerRef as any}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
-          className={`group bg-white rounded-lg p-4 shadow-sm border ${
+          role="button"
+          tabIndex={0}
+          aria-label={`View task ${task.title}`}
+          onClick={() => navigate(`/task/${task.id}`)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              navigate(`/task/${task.id}`);
+            }
+          }}
+          className={`block group bg-white rounded-lg p-4 shadow-sm border ${
             snapshot.isDragging ? 'border-blue-400 shadow-md ring-1 ring-blue-400 opacity-90' : 'border-gray-200 hover:border-gray-300'
-          } mb-3 cursor-grab active:cursor-grabbing transition-colors`}
+          } mb-3 cursor-grab active:cursor-grabbing transition-colors outline-none focus:ring-2 focus:ring-blue-500`}
         >
           <div className="flex justify-between items-start mb-2 gap-2">
-            <h4 className="text-gray-900 font-medium text-sm leading-snug line-clamp-2">
+            <Link 
+              to={`/task/${task.id}`}
+               onPointerDown={(e) => e.stopPropagation()} 
+               onMouseDown={(e) => e.stopPropagation()}
+               onClick={(e) => e.stopPropagation()}
+               className="text-gray-900 font-medium text-sm leading-snug line-clamp-2 hover:text-blue-600 hover:underline"
+            >
               {task.title}
-            </h4>
+            </Link>
           </div>
 
           <div className="flex flex-wrap gap-1.5 mb-3">
-            <span className={`px-2 py-0.5 rounded text-xs font-medium ${priorityColors[task.priority]}`}>
+            <Badge variant={
+                task.priority === 'high' ? 'error' : 
+                task.priority === 'medium' ? 'warning' : 'info'
+            }>
               {priorityLabels[task.priority]}
-            </span>
+            </Badge>
             {task.tags.map((tag) => (
-              <span key={tag} className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs font-medium">
+              <Badge key={tag} variant="default">
                 {tag}
-              </span>
+              </Badge>
             ))}
           </div>
 

@@ -32,10 +32,15 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, 
       <div className="fixed inset-0 bg-black/50 transition-opacity" onClick={onClose} />
 
       {/* Modal dialog */}
-      <div className="relative z-50 w-full max-w-lg transform overflow-hidden rounded-xl bg-white text-left align-middle shadow-xl transition-all">
+      <div 
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? "modal-title" : undefined}
+        className="relative z-50 w-full max-w-lg transform overflow-hidden rounded-xl bg-white text-left align-middle shadow-xl transition-all"
+      >
         {title && (
           <div className="border-b border-gray-200 px-6 py-4">
-            <h3 className="text-lg font-medium leading-6 text-gray-900">{title}</h3>
+            <h3 id="modal-title" className="text-lg font-medium leading-6 text-gray-900">{title}</h3>
           </div>
         )}
 

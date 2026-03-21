@@ -12,6 +12,7 @@ export interface Task {
     avatarUrl?: string;
   };
   tags: string[];
+  createdAt?: string;
   updatedAt: string; // ISO date string
 }
 
